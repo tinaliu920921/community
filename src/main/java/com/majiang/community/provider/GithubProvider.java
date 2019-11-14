@@ -28,11 +28,11 @@ public class GithubProvider {
                 .build();
         try (Response response = client.newCall(request).execute()) {
             String string = response.body().string();
+            System.out.println("string的值为："+string);
             String token = string.split("&")[0].split("=")[1];
             System.out.println(" 第2步accessToken 的值为："+token);
             return  token;
         } catch (Exception e) {
-            e.printStackTrace();
         }
         return null;
     }//方法的大括号
