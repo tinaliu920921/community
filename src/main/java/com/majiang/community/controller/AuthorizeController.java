@@ -1,6 +1,8 @@
 package com.majiang.community.controller;
+import com.majiang.community.dao.UserMapper;
 import com.majiang.community.dto.AccessTokenDTO;
 import com.majiang.community.dto.GithubUser;
+import com.majiang.community.entity.User;
 import com.majiang.community.provider.GithubProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -11,6 +13,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.UUID;
 
 /**
  * @program: community
@@ -33,6 +36,8 @@ public class AuthorizeController {
     @Value("${github.clientSecret}")
     private String clientSecret;
 
+    @Autowired
+    private UserMapper userMapper;
 
     @GetMapping(value = "/callback")
     public String callback(@RequestParam(name="code") String code,
@@ -47,11 +52,19 @@ public class AuthorizeController {
         System.out.println("第一步accessTokenDTO的值为："+accessTokenDTO);
 
         String accessToken = githubProvider.getAccessToken(accessTokenDTO);
-        GithubUser user = githubProvider.getUser(accessToken);
-        System.out.println("user的值："+user);
-        if(user!=null){
+        GithubUser githubUser = githubProvider.getUser(accessToken);
+        System.out.println("user的值："+githubUser);
+        if(githubUser!=null){
+
+            User user = new User();
+            user.setName("tina920921");
+            user.setToken(UUID.randomUUID().toString());
+            user.setAccountId(String.valueOf(githubUser.getId()));
+            user.setGmtCreate(System.currentTimeMillis());
+            user.setGmtModified(user.getGmtCreate());
+            userMapper.insert(user);
             //登陆成功，写cookie 和session
-            request.getSession().setAttribute("user",user);
+            request.getSession().setAttribute("user",githubUser);
             return "redirect:/";
         }else{
             //登陆失败，重新登陆
